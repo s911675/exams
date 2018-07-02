@@ -1,4 +1,4 @@
-package com.sys4u.exam;
+package com.sys4u.exam.sort;
 
 public class QuickSort {
 	public static void main(String[] args) {
