@@ -1,6 +1,5 @@
 package com.gaia.test.day30;
 
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -8,7 +7,7 @@ public class MyTest {
 	public static void main(String[] args) {
 		MyTest test = new MyTest ();
 		
-		String value = "asdf af";
+		String value = "as df af";
 		
 		test.printDuplicateChars(value);;
 	}
@@ -18,7 +17,10 @@ public class MyTest {
 			throw new IllegalArgumentException();
 		}
 		
-		value.chars().map(c ->new String(c)).collect(Collectors.toList());
-		
+		value.chars()
+		.mapToObj(c -> (char)c)
+		.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+		.entrySet().stream().filter(x -> x.getValue() > 1)
+		.forEach(x -> System.out.println(String.format("%c:%d", x.getKey(), x.getValue())));
 	}
 }
