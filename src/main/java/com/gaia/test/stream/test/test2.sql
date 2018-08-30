@@ -1,179 +1,149 @@
-460394263
-461830845
-466623502
-383658951
-462926581
-466980424
-467342264
-434627137
-464812425
-352238125
-433896985
-261894785
-464108733
-466621761
-466621695
-467076745
-137074698
-462926585
-466623486
-467342198
-218159590
-461456912
-462926586
-464108741
-461456899
-467360936
-467400978
-466980441
-461798713
-467342226
-433886389
-457672766
-462926634
-461454679
-461799148
-461830841
-462926606
-464059920
-467342240
-444095370
-462926609
-464812409
-458707683
-459782944
-464108743
-457672765
-464108730
-355615900
-467095148
-462926603
-467343059
-464108738
-464569301
-466621837
-467342215
-435524455
-460689737
-467076649
-379830937
-464108722
-467080800
-384852029
-452844844
-464108714
-466623498
-467094204
-467342220
-362733689
-452844848
-461456076
-467368443
-435524493
-362763162
-447302623
-464108718
-467095189
-466980412
-460736616
-462928468
-462926632
-466629800
-467095182
-426624599
-434627146
-461798708
-464570929
-464818518
-466980413
-413894227
-467095193
-467095150
-165883897
-464570924
-467076656
-467095186
-460760823
-461457190
-464570903
-391984324
-433896974
-461456077
-461456904
-464812452
-466980420
-461798688
-466980410
-467095140
-467343024
-461799130
-362763166
-452844858
-467095167
-460760627
-466980469
-462926637
-466980431
-466980890
-435524468
-461457194
-462928496
-466629804
-467080799
-467343040
-384893246
-403153911
-462926601
-464059930
-466623489
-461799147
-466629812
-466621756
-462926582
-464818523
-461798684
-461798714
-466623481
-466623490
-467342207
-452844856
-464570937
-466623475
-467342184
-464108739
-466623496
-466980415
-467076757
-462928458
-361280379
-462926584
-462928472
-467095152
-461798725
-464570917
-434627130
-462926583
-464570930
-460017293
-461454687
-461798709
-467095143
-467343063
-462926658
-464108734
-464570908
-361981755
-374690293
-381192510
-467076753
-452844869
-461457192
-433886375
-466629826
-467095139
-433896993
-451541878
-464570936
-465292584
-466980409
-467342997
+SELECT modelno, att_code, attval_code, attval_del, attval_rename FROM (
+	SELECT
+	    (
+	        CASE
+	            WHEN OLD.att_code IS NULL		THEN 'C' /* 추가 */
+	            WHEN OLD.change_type = 'D' AND NEW.att_code IS NOT NULL THEN 'C' /* 추가 */
+	            WHEN NEW.att_code IS NULL		THEN 'D' /* 삭제 */
+	            WHEN OLD.attval_rename != NEW.attval_rename THEN 'U' /* 수정 */
+	            ELSE 'N'	/* 변경 없음 */
+	        END
+	    ) AS change_type,
+	    (
+	    	CASE
+	    		WHEN NEW.att_code IS NULL THEN OLD.modelno
+	    		ELSE NEW.modelno
+	    	END
+	    ) AS modelno,
+	    (
+	    	CASE
+	    		WHEN NEW.att_code IS NULL THEN OLD.att_code
+	    		ELSE NEW.att_code
+	    	END
+	    ) AS att_code,
+	    (
+	    	CASE
+	    		WHEN NEW.attval_code IS NULL THEN OLD.attval_code
+	    		ELSE NEW.attval_code
+	    	END
+	    ) AS attval_code,
+	    (
+	    	CASE
+	    		WHEN NEW.att_code IS NULL THEN OLD.attval_rename
+	    		ELSE NEW.attval_rename
+	    	END
+	    ) AS attval_rename,
+	    (
+	    	CASE
+	    		WHEN NEW.att_code IS NULL THEN OLD.date
+	    		ELSE NEW.date
+	    	END
+	    ) AS date,
+	    (
+	    	CASE
+	    		WHEN NEW.att_code IS NULL THEN OLD.moddate
+	    		ELSE NEW.moddate
+	    	END
+	    ) AS moddate,
+	    (
+	    	CASE
+	    		WHEN NEW.att_code IS NULL THEN OLD.attval_del
+	    		ELSE NEW.attval_del
+	    	END
+	    ) AS attval_del
+	FROM
+	(
+		SELECT
+			change_type,
+			modelno,
+			att_code,
+			attval_code,
+			attval_rename,
+			date,
+			moddate,
+			attval_del
+		FROM at_athena_enuri_catalog_attribute
+		WHERE yyyy='2018'
+			AND mm = '08'
+			AND dd = '16'
+			AND type='00'
+			AND CONCAT( CAST (modelno AS VARCHAR), '^', CAST (att_code AS VARCHAR), '^', CAST (attval_code AS VARCHAR)) NOT IN
+			(
+				SELECT CONCAT( CAST (modelno AS VARCHAR), '^', CAST (att_code AS VARCHAR), '^', CAST (attval_code AS VARCHAR))
+				FROM at_athena_enuri_catalog_attribute
+				WHERE yyyy='2018'
+					AND mm = '08'
+					AND dd = '16'
+					AND type IN ('01','02')
+			)
+			
+		UNION ALL
+	
+		SELECT
+			change_type,
+			modelno,
+			att_code,
+			attval_code,
+			attval_rename,
+			date,
+			moddate,
+			attval_del
+		FROM at_athena_enuri_catalog_attribute
+		WHERE yyyy='2018'
+			AND mm = '08'
+			AND dd = '16'
+			AND type='01'
+			AND CONCAT( CAST (modelno AS VARCHAR), '^', CAST (att_code AS VARCHAR), '^', CAST (attval_code AS VARCHAR)) NOT IN
+			(
+				SELECT CONCAT( CAST (modelno AS VARCHAR), '^', CAST (att_code AS VARCHAR), '^', CAST (attval_code AS VARCHAR))
+				FROM at_athena_enuri_catalog_attribute
+				WHERE yyyy='2018'
+					AND mm = '08'
+					AND dd = '16'
+					AND type IN ('02')
+			)
+			
+		UNION ALL
+	
+		SELECT
+			change_type,
+			modelno,
+			att_code,
+			attval_code,
+			attval_rename,
+			date,
+			moddate,
+			attval_del
+		FROM at_athena_enuri_catalog_attribute
+		WHERE yyyy='2018'
+			AND mm = '08'
+			AND dd = '16'
+			AND type='02'
+	) OLD
+	
+	FULL OUTER JOIN
+	
+	(
+		SELECT
+			change_type,
+			modelno,
+			att_code,
+			attval_code,
+			attval_rename,
+			date,
+			moddate,
+			attval_del
+		FROM at_athena_enuri_catalog_attribute
+		WHERE yyyy='2018'
+			AND mm = '08'
+			AND dd = '17'
+			AND type='00'
+	) NEW
+	
+	ON (OLD.modelno = NEW.modelno AND OLD.att_code = NEW.att_code AND OLD.attval_code = NEW.attval_code)
+	
+	WHERE OLD.att_code is null
+	    OR NEW.att_code is null
+	    OR OLD.attval_rename != NEW.attval_rename
+	    OR (NEW.change_type IS NOT NULL AND OLD.change_type = 'D')
+) A
